@@ -1,0 +1,8 @@
+{
+  "appId": "com.tindahan.app",
+  "appName": "TINDAHAN",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
