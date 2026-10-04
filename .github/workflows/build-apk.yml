@@ -1,0 +1,64 @@
+name: Build TINDAHAN APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get TINDAHAN
+        uses: actions/checkout@v7
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Prepare web files
+        run: |
+          mkdir -p www
+          cp index.html app.js styles.css sw.js manifest.webmanifest www/
+          mkdir -p www/assets
+          printf '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#0f766e"/><text x="50" y="62" text-anchor="middle" font-size="30" fill="white" font-family="Arial">T</text></svg>' > www/assets/icon.svg
+
+      - name: Set Capacitor web directory
+        run: |
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "com.tindahan.app",
+            "appName": "TINDAHAN",
+            "webDir": "www",
+            "server": {
+              "androidScheme": "https"
+            }
+          }
+          EOF
+
+      - name: Install packages
+        run: npm install
+
+      - name: Create Android project
+        run: npx cap add android
+
+      - name: Sync Android
+        run: npx cap sync android
+
+      - name: Build APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: TINDAHAN-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
